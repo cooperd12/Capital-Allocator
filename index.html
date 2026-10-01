@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Capital">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>Capital Allocator</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b0f14;color:#f7f9fc;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;padding:22px 16px 40px}.w{max-width:560px;margin:auto}h1{margin:0;font-size:30px}.sub{color:#9aa7b8;margin:5px 0 18px}.c{background:#151b23;border:1px solid #283240;border-radius:18px;padding:16px;margin:12px 0}label{display:block;color:#9aa7b8;font-size:13px;margin:8px 0 6px}input{width:100%;padding:14px;border-radius:13px;border:1px solid #283240;background:#10151c;color:#fff;font-size:18px}button{width:100%;padding:15px;margin-top:12px;border:0;border-radius:13px;background:#3478f6;color:#fff;font-size:17px;font-weight:700}.r{display:flex;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #283240}.r:last-child{border:0}.r span{color:#9aa7b8}.big{font-size:34px;font-weight:800;margin:5px 0 12px}summary{font-weight:700}.note{font-size:12px;color:#9aa7b8;line-height:1.45;margin-top:12px}
+</style>
+</head>
+<body><main class="w">
+<h1>Capital Allocator</h1><div class="sub">Weekly clinic revenue → exactly where the money goes.</div>
+<section class="c"><label>Revenue collected this week</label><input id="rev" type="number" inputmode="decimal" value="34615"><button id="go">Calculate</button></section>
+<section class="c"><div class="sub" style="margin:0">EXTRA DEBT PRINCIPAL THIS WEEK</div><div id="debt" class="big">$0</div>
+<div class="r"><span>Tax reserve</span><b id="tax">$0</b></div>
+<div class="r"><span>Personal distribution</span><b id="personal">$0</b></div>
+<div class="r"><span>Investments</span><b id="invest">$0</b></div>
+<div class="r"><span>Kids</span><b id="kids">$0</b></div>
+<div class="r"><span>Opportunity cash</span><b id="opp">$0</b></div>
+<div class="r"><span>Emergency reserves</span><b id="reserve">$0</b></div>
+<div class="r"><span>Monthly revenue run rate</span><b id="monthly">$0</b></div>
+<div class="r"><span>Debt target</span><b id="target">Equipment</b></div></section>
+<section class="c"><details><summary>Settings</summary>
+<label>Monthly business expenses</label><input id="expenses" type="number" value="30000">
+<label>Tax reserve %</label><input id="rate" type="number" value="30">
+<label>Personal monthly expenses</label><input id="pexp" type="number" value="10000">
+<label>Monthly salary already paid</label><input id="salary" type="number" value="4940">
+<label>Monthly investing</label><input id="iset" type="number" value="10000">
+<label>Monthly kids investing</label><input id="kset" type="number" value="1000">
+<label>Monthly opportunity cash</label><input id="oset" type="number" value="5000">
+<label>Emergency reserve target</label><input id="rtarget" type="number" value="120000">
+<label>Current emergency reserves</label><input id="rcurrent" type="number" value="120000">
+<label>Monthly reserve contribution when under target</label><input id="rcontrib" type="number" value="10000">
+<label>Equipment balance</label><input id="equipment" type="number" value="80000">
+<label>Building bank balance</label><input id="building" type="number" value="700000">
+<label>Home mortgage balance</label><input id="home" type="number" value="705000">
+<div class="note">Priority: Equipment → Building bank → Home. SBA remains at its minimum payment.</div>
+</details></section></main>
+<script>
+(function(){
+const ids=["rev","expenses","rate","pexp","salary","iset","kset","oset","rtarget","rcurrent","rcontrib","equipment","building","home"];
+const e=id=>document.getElementById(id),n=id=>Math.max(0,parseFloat(e(id).value)||0),m=x=>"$"+Math.round(Math.max(0,x)).toLocaleString("en-US"),wf=12/52;
+function save(){try{let s={};ids.forEach(i=>s[i]=e(i).value);localStorage.setItem("capital-v3",JSON.stringify(s))}catch(x){}}
+function load(){try{let s=JSON.parse(localStorage.getItem("capital-v3")||"{}");ids.forEach(i=>{if(s[i]!=null)e(i).value=s[i]})}catch(x){}}
+function calc(){save();let monthly=n("rev")*52/12,profit=Math.max(0,monthly-n("expenses")),tax=profit*Math.min(60,n("rate"))/100,dist=Math.max(0,n("pexp")-n("salary")),gap=Math.max(0,n("rtarget")-n("rcurrent")),res=gap?Math.min(n("rcontrib"),gap):0,a=Math.max(0,profit-tax-res),p=Math.min(dist,a);a-=p;let inv=Math.min(n("iset"),a);a-=inv;let k=Math.min(n("kset"),a);a-=k;let o=Math.min(n("oset"),a);a-=o;let d=Math.max(0,a);
+e("monthly").textContent=m(monthly);e("tax").textContent=m(tax*wf);e("personal").textContent=m(p*wf);e("invest").textContent=m(inv*wf);e("kids").textContent=m(k*wf);e("opp").textContent=m(o*wf);e("reserve").textContent=m(res*wf);e("debt").textContent=m(d*wf);e("target").textContent=n("equipment")>0?"Equipment":n("building")>0?"Building":n("home")>0?"Home":"No non-SBA debt";}
+load();e("go").addEventListener("click",calc);ids.forEach(i=>e(i).addEventListener("change",calc));calc();
+if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}))}
+})();
+</script></body></html>
